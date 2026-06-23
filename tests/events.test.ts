@@ -19,6 +19,15 @@ describe("EventBus", () => {
     bus.emit("count", 2);
     expect(received).toEqual([1]);
   });
+  
+  it("unsubscribe function safely handles cleared handlers", () => {
+    const bus = new EventBus();
+    const unsub = bus.on("test", () => {});
+    bus.clear();
+    // This will hit the `this.handlers.get(eventType) ?? []` fallback in the unsub function
+    unsub();
+    expect(bus.registeredTypes).toBe(1); // Because unsub() re-adds an empty array when it filters
+  });
 
   it("should maintain event history", () => {
     const bus = new EventBus();
@@ -45,5 +54,9 @@ describe("EventBus", () => {
     expect(bus.registeredTypes).toBe(2);
     bus.clear("a");
     expect(bus.registeredTypes).toBe(1);
+    
+    // clear all handlers
+    bus.clear();
+    expect(bus.registeredTypes).toBe(0);
   });
 });
